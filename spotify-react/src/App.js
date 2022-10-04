@@ -11,6 +11,7 @@ function App() {
 
   const [token, setToken] = useState("")
   const [searchKey, setSearchKey] = useState("")
+  const [artists, setArtists] = useState([])
 
   useEffect(() => {
     const hash = window.location.hash
@@ -21,8 +22,9 @@ function App() {
 
       window.location.hash = ""
       window.localStorage.setItem('token', token)
-      setToken(token)
     }
+    setToken(token)
+
   }, [])
 
   const logout = () => {
@@ -31,6 +33,7 @@ function App() {
   }
 
   const searchArtists = async (e) => {
+    e.preventDefault()
     const {data} = await axios.get("https://api.spotify.com/v1/search", {
       headers: {
         Authorization: `Bearer ${token}`
@@ -39,15 +42,29 @@ function App() {
           q: searchKey,
           type: "artist"
         }
-    }
-    )
+    })
+
+    setArtists(data.artists.items)
+  }
+
+  const renderArtists = () => {
+    return artists.map(artist => (
+      <div key={artist.id}>
+      <div className="artist-image">
+        {artist.images.length ? <img src={artist.images[0].url} alt=""/> : <div>No Image</div>}
+        </div>
+      <div className="artist-name">
+        {artist.name}
+      </div>
+      </div>
+    ))
   }
 
   return (
     <div className="App">
       <header className="App-header">
-        <p>
-          Welcome to Spotify.
+        <p class="logo-header">
+          Spotify
         </p>
         {!token ?
         <a
@@ -55,7 +72,7 @@ function App() {
           href={`${auth_endpoint}?client_id=${client_id}&redirect_uri=${redirect_uri}&response_type=${response_type}`}>
           Log In
         </a>
-        : <button onClick={logout}>Log Out</button>}
+        : <button class="logout" onClick={logout}>Log Out</button>}
 
         {token ?
         <form onSubmit={searchArtists}>
@@ -63,8 +80,10 @@ function App() {
           <button type={"submit"}>Search</button>
         </form>
 
-        : <h2>Please Log In</h2>
+        : <p>Welcome to quick Spotify search. Please log in to search for artists or songs.</p>
         }
+
+        {renderArtists()}
 
       </header>
     </div>
